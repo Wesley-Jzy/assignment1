@@ -30,3 +30,5 @@ Wrote image file mandelbrot-thread.ppm
 而view 2任务比较均衡，相对来说加速效果较好。
 
 预测和观察到的时间符合，结论是每个thread负责的任务量不一致，负载不均衡导致加速没有达到期望中的效果。
+
+TODO: 找一个合适的分割使得view 1/2在threads=4时候的加速比都能达到3.5X
