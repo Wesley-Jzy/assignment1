@@ -238,8 +238,63 @@ void clampedExpSerial(float* values, int* exponents, float* output, int N) {
 
 void clampedExpVector(float* values, int* exponents, float* output, int N) {
   // TODO: Implement your vectorized version of clampedExpSerial here
+  __cmu418_vec_float x;
+  __cmu418_vec_int y, count;
+  __cmu418_vec_float result;
+  __cmu418_vec_int zero = _cmu418_vset_int(0);
+  __cmu418_vec_int one = _cmu418_vset_int(1);
+  __cmu418_vec_float clamp = _cmu418_vset_float(9.999999f);
+  __cmu418_mask maskAll, maskIsZero, maskIsNotZero, maskGtZero, maskGtClamp;
 
   for (int i=0; i<N; i+=VECTOR_WIDTH) {
+
+    // All ones
+    if (N % VECTOR_WIDTH == 0) {
+      maskAll = _cmu418_init_ones();
+    } else { // last iteration perhaps need this speical care
+      maskAll = _cmu418_init_ones(N % VECTOR_WIDTH);
+    }
+
+    // All zeros
+    maskIsZero = _cmu418_init_ones(0);
+    maskIsNotZero = _cmu418_init_ones(0);
+    maskGtZero = _cmu418_init_ones(0);
+    maskGtClamp = _cmu418_init_ones(0);
+
+    _cmu418_vload_float(x, values + i, maskAll); // float x = values[i];
+
+    _cmu418_vload_int(y, exponents + i, maskAll); // int y = exponents[i];
+
+    _cmu418_veq_int(maskIsZero, y, zero, maskAll); // if (y == 0) {
+
+    _cmu418_vset_float(result, 1.f, maskIsZero); // output[i] = 1.f;
+
+    maskIsNotZero = _cmu418_mask_not(maskIsZero);
+    maskIsNotZero = _cmu418_mask_and(maskIsNotZero, maskAll); // } else {
+    
+    _cmu418_vmove_float(result, x, maskIsNotZero); // float result = x;
+
+    _cmu418_vsub_int(count, y, one, maskIsNotZero); // int count = y - 1;
+    _cmu418_vgt_int(maskGtZero, count, zero, maskIsNotZero);
+
+    while (_cmu418_cntbits(maskGtZero) > 0) { // while (count > 0) {
+    
+      _cmu418_vmult_float(result, result, x, maskGtZero); // result *= x;
+      
+      _cmu418_vsub_int(count, count, one, maskGtZero); // count--;
+      _cmu418_vgt_int(maskGtZero, count, zero, maskGtZero);
+
+    } // }
+
+    _cmu418_vgt_float(maskGtClamp, result, clamp, maskIsNotZero); // if (result > 9.999999f) {
+
+    _cmu418_vmove_float(result, clamp, maskGtClamp); // result = 9.999999f;
+
+    // }
+
+    _cmu418_vstore_float(output + i, result, maskAll); // output[i] = result;
+
+    // }
 
   }
 
