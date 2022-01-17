@@ -1,0 +1,32 @@
+Program 1: 
+查看mandelbrot set的具体计算逻辑可知，每次task运行loop的次数是不一样的，亮点处需要大量循环而暗点处几乎瞬间执行完。
+插入time record后可以看到：
+
+view 1
+threads = 2, 预期对半分
+Hello world from thread 0, [102.555] ms
+Hello world from thread 1, [104.532] ms
+[mandelbrot thread]:		[102.241] ms
+Wrote image file mandelbrot-thread.ppm
+				(1.97x speedup from 2 threads)
+
+threads = 3, 预期idx1任务量大
+Hello world from thread 0, [40.951] ms
+Hello world from thread 1, [125.207] ms
+Hello world from thread 2, [41.255] ms
+[mandelbrot thread]:		[124.376] ms
+Wrote image file mandelbrot-thread.ppm
+				(1.61x speedup from 3 threads)
+
+threads = 4, 预期idx0=idx3, idx1=idx2, 且idx1/2任务量大
+Hello world from thread 0, [19.046] ms
+Hello world from thread 1, [82.858] ms
+Hello world from thread 2, [83.741] ms
+Hello world from thread 3, [20.153] ms
+[mandelbrot thread]:		[83.813] ms
+Wrote image file mandelbrot-thread.ppm
+				(2.40x speedup from 4 threads)
+
+而view 2任务比较均衡，相对来说加速效果较好。
+
+预测和观察到的时间符合，结论是每个thread负责的任务量不一致，负载不均衡导致加速没有达到期望中的效果。
