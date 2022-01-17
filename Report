@@ -36,3 +36,34 @@ TODO: 找一个合适的分割使得view 1/2在threads=4时候的加速比都能
 Program 2:
 1. 给的abs example存在什么问题?
 当 (N % VECTOR_WIDTH) != 0时， 最后一个iteration做_cmu418_vload_float(x, values+i, maskAll) 会访存越界。
+
+2. size = 10000
+width = 2
+Vector Width:              2
+Total Vector Instructions: 167727
+Vector Utilization:        77.616901%
+Utilized Vector Lanes:     260369
+Total Vector Lanes:        335454
+
+width = 4
+Vector Width:              4
+Total Vector Instructions: 97075
+Vector Utilization:        70.457121%
+Utilized Vector Lanes:     273585
+Total Vector Lanes:        388300
+
+width = 8
+Vector Width:              8
+Total Vector Instructions: 52877
+Vector Utilization:        66.728682%
+Utilized Vector Lanes:     282273
+Total Vector Lanes:        423016
+
+width = 16
+Vector Width:              16
+Total Vector Instructions: 27592
+Vector Utilization:        64.988267%
+Utilized Vector Lanes:     286905
+Total Vector Lanes:        441472
+
+可以看到Vector Utilization下降了，分析代码猜测是因为while循环的原因：while循环的次数是由width长度的data中最大的y决定的，其余早早降到0的y占用的lane都是额外的cost,所以width越长，就有越多lane被bound住越久。
