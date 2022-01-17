@@ -249,7 +249,7 @@ void clampedExpVector(float* values, int* exponents, float* output, int N) {
   for (int i=0; i<N; i+=VECTOR_WIDTH) {
 
     // All ones
-    if (N % VECTOR_WIDTH == 0) {
+    if (N % VECTOR_WIDTH == 0 || i <= N - VECTOR_WIDTH) {
       maskAll = _cmu418_init_ones();
     } else { // last iteration perhaps need this speical care
       maskAll = _cmu418_init_ones(N % VECTOR_WIDTH);
