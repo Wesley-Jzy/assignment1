@@ -34,6 +34,12 @@ void* workerThreadStart(void* threadArgs) {
     // TODO: Implement worker thread here.
     int numRows = (args->height + args->numThreads - 1) / args->numThreads;
     int startRow = args->threadId * numRows;
+
+    // Handle the last split
+    if (args->threadId == args->numThreads - 1) {
+        numRows = args->height - startRow;
+    }
+
     mandelbrotSerial(args->x0, args->y0, args->x1, args->y1, args->width, args->height, startRow, numRows, args->maxIterations, args->output);
 
     printf("Hello world from thread %d\n", args->threadId);
