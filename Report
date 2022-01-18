@@ -69,3 +69,43 @@ Total Vector Lanes:        441472
 可以看到Vector Utilization下降了，分析代码猜测是因为while循环的原因：while循环的次数是由width长度的data中最大的y决定的，其余早早降到0的y占用的lane都是额外的cost,所以width越长，就有越多lane被bound住越久。
 
 Extra credit: Reduction by [0 1 2 3 4 5 6 7] hadd-> [1 1 5 5 9 9 13 13] interleave-> [1 5 9 13 1 5 9 13] maskHalf-> hadd loop
+
+Program 3:
+Part 1
+[mandelbrot serial]:		[203.058] ms
+Wrote image file mandelbrot-serial.ppm
+[mandelbrot ispc]:		[44.666] ms
+Wrote image file mandelbrot-ispc.ppm
+				(4.55x speedup from ISPC)
+达到了4.55X, 而我的CPU是6核12线程的Intel(R) Core(TM) i7-8700K CPU @ 3.70GHz。这里single core的理论speedup应该是2(2 threads per core) * 4(SSE Width)? 不太确定超线程和ISPC的结合方式。
+达不到理论speedup的原因应该是mandel函数里任务不均衡，白点处count越多， 执行计算越多，VectorWidth能被使用得更充分。而黑点处都在执行if/for这些Program2中我们知道要大量mask的命令，SIMD的不能充分发挥作用。
+
+Part 2
+1.
+[mandelbrot serial]:		[202.670] ms
+Wrote image file mandelbrot-serial.ppm
+[mandelbrot ispc]:		[44.364] ms
+Wrote image file mandelbrot-ispc.ppm
+[mandelbrot multicore ispc]:	[23.285] ms
+Wrote image file mandelbrot-task-ispc.ppm
+				(4.57x speedup from ISPC)
+				(8.70x speedup from task ISPC)
+
+可以观察到tasks version的code比原始版本快了一倍, amazing!
+
+2. 直接拆分成height个task，每个处理一行
+[mandelbrot serial]:		[204.312] ms
+Wrote image file mandelbrot-serial.ppm
+[mandelbrot ispc]:		[44.477] ms
+Wrote image file mandelbrot-ispc.ppm
+[mandelbrot multicore ispc]:	[7.074] ms
+Wrote image file mandelbrot-task-ispc.ppm
+				(4.59x speedup from ISPC)
+				(28.88x speedup from task ISPC)
+
+可以看到在我的工作PC上达到了28.88倍的speedup，基本是我单任务的6倍，这样看single core ISPC也能充分利用超线程技术。
+具体的原因如下：查看ISPC task的document可以看到它采用的是worker pool的model，启动min(task number, processcor num)数量的worker，执行完一个task后去执行下一个。
+党任务能完美均分的时候，只需要开core数量个任务就能达到最高speedup。而当任务不能平均分配的时候，尽可能多的拆分能使得尽量多的处理器时间被用到。
+
+3. 10000个threads和10000个tasks的区别
+上面说了，10000个tasks并不会真的开10000个线程，而是compiler决定开合理数量的worker pool去执行所有tasks，这样启动和关闭线程的开销会小。
