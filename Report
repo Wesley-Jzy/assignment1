@@ -157,3 +157,16 @@ Program4:
 
 3.
 1的时候最差，这时候几乎没有data parallel了，SIMD不但没有效果而且还因为mask导致变慢了。1.87x大概来自超线程。
+
+Program 5:
+1.
+[saxpy ispc]:		[13.782] ms	[21.624] GB/s	[2.902] GFLOPS
+[saxpy task ispc]:	[13.766] ms	[21.649] GB/s	[2.906] GFLOPS
+				(1.00x speedup from use of tasks)
+
+without_task和with_task一样
+这应该是Lecture2讲过的带宽限制问题，saxpy是一个只有一次加法一次乘法计算的程序，不是计算密集型，主要瓶颈在内存带宽上。
+
+2.SIMD指令是以4Width访问的，无论实际数据有多少。
+
+3.TODO: Improve the performance of saxpy. 
