@@ -109,3 +109,51 @@ Wrote image file mandelbrot-task-ispc.ppm
 
 3. 10000个threads和10000个tasks的区别
 上面说了，10000个tasks并不会真的开10000个线程，而是compiler决定开合理数量的worker pool去执行所有tasks，这样启动和关闭线程的开销会小。
+
+Program4:
+1.
+[sqrt serial]:		[744.294] ms
+[sqrt ispc]:		[271.795] ms
+[sqrt task ispc]:	[30.082] ms
+				(2.74x speedup from ISPC)
+				(24.74x speedup from task ISPC)
+
+非task ispc的2.74X是纯由SIMD带来的加速，64tasks ispc使用到了6core带来的加速。还有一部分应该是由worker pool模型对任务更细致的切分带来的收益。
+
+2.
+将values修改为全3.0f
+我机子直接挂了。。。
+
+将values修改为全2.99f
+[sqrt serial]:		[1371.420] ms
+[sqrt ispc]:		[402.022] ms
+[sqrt task ispc]:	[46.270] ms
+				(3.41x speedup from ISPC)
+				(29.64x speedup from task ISPC)
+
+将values修改为全2.9f
+[sqrt serial]:		[762.937] ms
+[sqrt ispc]:		[246.095] ms
+[sqrt task ispc]:	[28.947] ms
+				(3.10x speedup from ISPC)
+				(26.36x speedup from task ISPC)
+
+将values修改为全2.0f
+[sqrt serial]:		[258.432] ms
+[sqrt ispc]:		[90.933] ms
+[sqrt task ispc]:	[13.664] ms
+				(2.84x speedup from ISPC)
+				(18.91x speedup from task ISPC)
+
+将values修改为全1.0f
+[sqrt serial]:		[20.795] ms
+[sqrt ispc]:		[11.096] ms
+
+[sqrt task ispc]:	[10.191] ms
+				(1.87x speedup from ISPC)
+				(2.04x speedup from task ISPC)
+
+观察一下应该是3的时候最好，这时候计算量达到最大，能充分体现SIMD的优势。
+
+3.
+1的时候最差，这时候几乎没有data parallel了，SIMD不但没有效果而且还因为mask导致变慢了。1.87x大概来自超线程。
