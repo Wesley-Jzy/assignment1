@@ -313,11 +313,30 @@ float arraySumSerial(float* values, int N) {
 // Assume VECTOR_WIDTH is a power of 2
 float arraySumVector(float* values, int N) {
   // TODO: Implement your vectorized version of arraySumSerial here
+  
+  float sum[VECTOR_WIDTH];
+  __cmu418_vec_float x;
+  __cmu418_vec_float result = _cmu418_vset_float(0.0f);
+  __cmu418_mask maskAll, maskFirst;
+
+  maskFirst = _cmu418_init_ones(1);  
 
   for (int i=0; i<N; i+=VECTOR_WIDTH) {
+    maskAll = _cmu418_init_ones();
 
+    _cmu418_vload_float(x, values + i, maskAll);
+
+    int cnt = _cmu418_cntbits(maskAll);
+    while (cnt > 1) {
+      _cmu418_hadd_float(x, x);
+      _cmu418_interleave_float(x, x);
+      cnt = cnt / 2;
+    }
+
+    _cmu418_vadd_float(result, result, x, maskFirst);
   }
 
-  return 0.0;
+  _cmu418_vstore_float(sum, result, maskFirst);
+  return sum[0];
 }
 

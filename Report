@@ -67,3 +67,5 @@ Utilized Vector Lanes:     286905
 Total Vector Lanes:        441472
 
 可以看到Vector Utilization下降了，分析代码猜测是因为while循环的原因：while循环的次数是由width长度的data中最大的y决定的，其余早早降到0的y占用的lane都是额外的cost,所以width越长，就有越多lane被bound住越久。
+
+Extra credit: Reduction by [0 1 2 3 4 5 6 7] hadd-> [1 1 5 5 9 9 13 13] interleave-> [1 5 9 13 1 5 9 13] maskHalf-> hadd loop
